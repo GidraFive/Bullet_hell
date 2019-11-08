@@ -1,104 +1,156 @@
 void settings() {
-  fullScreen();
+  //fullScreen();
+  size(720, 1280);
+  noSmooth();
 }
 
 void setup() {
-  noSmooth();;
-  
-  //--------------------------------------------------------
-  int bulletsNum = 700;
+  cannons = new ArrayList<Cannon>();
 
-  s[0] = new Cannon(bulletsNum);
-  s[0].setPosition(width / 2, height / 2 - 200);
-  s[0].fireModule.shotDelay = 50;
-  s[0].fireModule.bulletShotsAtOnce = 100;
-  s[0].fireModule.firePattern = new FirePattern() {
-    public void fire(Bullet bullet, int bulletNum, float cannonX, float cannonY)
+  Cannon c1 = new Cannon();
+  cannons.add(c1);
+  c1.setPosition(width / 2, height / 2 - 200);
+  c1.health = 100;
+
+  c1.addFCPattern(new FCPattern() {
+    public void fire()
     {
-      float x = 2000;
-      float y = 0;
+      int num = this.bulletsCount;
+      Bullet bullet = new ABullet();
+      bullets.add(bullet);
+
       float bulletSpeedX = 0;
       float bulletSpeedY = 0;
-      
-      x = cannonX;
-      y = cannonY;
-      bulletSpeedX=0.01*(bulletNum%100+15)*cos(1.06*bulletNum);
-      bulletSpeedY=0.01*(bulletNum%100+15)*sin(1.06*bulletNum);
-      
-      bullet.x = x;
-      bullet.y = y;
-      bullet.speedX = bulletSpeedX;
-      bullet.speedY = bulletSpeedY;
-      bullet.speed = 12;
-      //bullet.ricochetModule.numOfRicochets = 1;
+      int bulInShot = this.bulletsPerShot;
+
+      bulletSpeedX = cos(1.06 * num);
+      bulletSpeedY = sin(1.06 * num);
+
+      bullet.setPosition(this.gameObject.getPosition());
+
+      bullet.setMPattern(new MPattern() {
+        public void move() {
+          super.moveWithConstSpeedAndRicochet();
+        }
+      });
+
+      bullet.mPattern.setVelocity(bulletSpeedX, bulletSpeedY);
+      bullet.mPattern.speed = 0.12 * (num % bulInShot + 15);
+
+      int numOfCycles = 300;
+      super.changeBulletColorHSB(numOfCycles);
     }
-  };
-  s[0].moveModule.movePattern = new MovePattern() {
-    public PVector move(float x, float y, int time) {
-      x = width / 2;
-      y = height / 2 - 300;
+  });
+  c1.getFCPattern(0).setOptions(50, 100);
+
+  c1.setMPattern(new MPattern() {
+    public void move() {
+      float x = width / 2;
+      float y = height / 2 - 300;
       float radius = 200;
       int period = 300;
       float phase0 = 0;
-      
-      return super.rotateAround(
-        x, y, time, radius, period, true, phase0);
+
+      super.rotateAround(x, y, radius, period, true, phase0);
     }
-  };
-  s[0].bulletColPattern = new BulletColorPattern() {
-    public void setBulletColor(Bullet bullet, int bulletNum, int bulletCount) {
-      super.changeBulletColorHSB(bullet, bulletNum, bulletCount, 2);
-    }
-  };
-  
-  //---------------------------------------------------
-  
-  s[1] = new Cannon(bulletsNum);
-  s[1].setPosition(width / 2, height / 2 - 200);
-  s[1].fireModule.shotDelay = 50;
-  s[1].fireModule.bulletShotsAtOnce = 100;
-  s[1].fireModule.firePattern = new FirePattern() {
-    public void fire(Bullet bullet, int bulletNum, float cannonX, float cannonY)
+  });
+
+  //----------------------------------------------------------------------------
+
+  Cannon c2 = new Cannon();
+  cannons.add(c2);
+  c2.setPosition(width / 2, height / 2 - 200);
+
+  c2.addFCPattern(new FCPattern() {
+    public void fire()
     {
-      float x = 2000;
-      float y = 0;
+      int num = this.bulletsCount;
+      Bullet bullet = new ABullet();
+      bullets.add(bullet);
+
       float bulletSpeedX = 0;
       float bulletSpeedY = 0;
-      
-      x = cannonX;
-      y = cannonY;
-      bulletSpeedX=0.01*(bulletNum%100+15)*cos(1.06*bulletNum);
-      bulletSpeedY=-0.01*(bulletNum%100+15)*sin(1.06*bulletNum);
-      
-      bullet.x = x;
-      bullet.y = y;
-      bullet.speedX = bulletSpeedX;
-      bullet.speedY = bulletSpeedY;
-      bullet.speed = 12;
-      //bullet.ricochetModule.numOfRicochets = 1;
+      int bulInShot = this.bulletsPerShot;
+
+      bulletSpeedX = cos(1.06 * num);
+      bulletSpeedY = -sin(1.06 * num);
+
+      bullet.setPosition(this.gameObject.getPosition());
+
+      bullet.mPattern.setVelocity(bulletSpeedX, bulletSpeedY);
+      bullet.mPattern.speed = 0.12 * (num % bulInShot + 15);
+
+      int numOfCycles = 300;
+      super.changeBulletColorHSB(numOfCycles);
     }
-  };
-  s[1].moveModule.movePattern = new MovePattern() {
-    public PVector move(float x, float y, int time) {
-      x = width / 2;
-      y = height / 2 - 300;
+  });
+  c2.getFCPattern(0).setOptions(50, 100);
+
+  c2.setMPattern(new MPattern() {
+    public void move() {
+      float x = width / 2;
+      float y = height / 2 - 300;
       float radius = 200;
       int period = 300;
       float phase0 = 0;
-      
-      return super.rotateAround(
-        x, y, time, radius, period, false, phase0);
+
+      super.rotateAround(x, y, radius, period, false, phase0);
     }
-  };
-  s[1].bulletColPattern = new BulletColorPattern() {
-    public void setBulletColor(Bullet bullet, int bulletNum, int bulletCount) {
-      super.changeBulletColorHSB(bullet, bulletNum, bulletCount, 2);
+  });
+
+  //----------------------------------------------------------------------------
+
+  test = new Cannon();
+  test.setPosition(width / 2, height / 2 - 200);
+  test.health = 500;
+  test.setColor(0, 255, 200);
+
+  test.addFCPattern(new FCPattern() {
+    public void fire() {
+      Bullet bullet = new ABullet();
+      bullets.add(bullet);
+
+      bullet.size = 20;
+      bullet.setPosition(this.gameObject.getPosition());
+      bullet.mPattern.setVelocity(super.shootToAllSides());
+      bullet.mPattern.speed = 5;
+
+      super.setColorOfAllShot(color(0, 255, 0));
     }
-  };
-  
-  //--------------------------------------------------------
-  
+  });
+  test.getFCPattern(0).setOptions(60, 8);
+
+  test.addFCPattern(new FCPattern() {
+    public void fire() {
+      int num = this.bulletsCount % 48;
+      Bullet bullet = new ABullet();
+      bullets.add(bullet);
+
+      Bullet zeroBul = ((Cannon)gameObject).getFCPattern(0).getBullet(num % 8);
+      PVector zeroBulPos = zeroBul.getPosition();
+
+      bullet.setPosition(zeroBulPos);
+      bullet.mPattern.setVelocity(super.targetPlayerFrom(zeroBulPos));
+      bullet.size = 10;
+      bullet.mPattern.speed = 5 + (num - num % 8) / 8;
+
+      super.changeBulletColorHSB(48 * 6);
+
+      if (num > 39) zeroBul.setPosition(2000, 0);
+    }
+  });
+  test.getFCPattern(1).setOptions(60, 48);
+  test.getFCPattern(1).setTimeCounter(-50);
+
+  //----------------------------------------------------------------------------
+
+  player = new Player();
   restartButton = new Button(width / 2 - 150, height / 2 + 50);
-  restartButton.setParameters("Restart");
-  player = new Player(width / 2, height - 100, 8);
+  restartButton.setOptions("Restart");
+
+  rectMode(CENTER);
+  textAlign(CENTER);
+
+  mouseX = 0;
+  mouseY = 0;
 }

@@ -1,195 +1,88 @@
-class Cannon {
-  Bullet[] bullets;
-  int numOfCurBullet;
-  int bulletsCount;
-  
-  float x;
-  float y;
+class Cannon extends GameObject {
   int health;
-  
   boolean isDead;
-  boolean isKillingPlayer;
-  // TODO: Move this variable to Bullet
-  
-  BulletColorPattern bulletColPattern;
-  // TODO: Create module for color
-  FireModule fireModule;
-  MoveModule moveModule;
-  // TODO: Add connection between modules
-  
+
+  protected ArrayList<FCPattern> fcPatterns = new ArrayList<FCPattern>();
+
   //----------- Constructor --------------------------------------
-  
-  public Cannon(int bulletsCount) {
-    bullets = new Bullet[bulletsCount];
-    this.bulletsCount = bulletsCount;
-    
+
+  public Cannon() {
     // Default values
-    this.setPosition(width / 2, height / 2);
-        
+    this.position = new PVector(width / 2, height / 2);
+    this.size = 40;
+    this.col = color(200, 0, 255);
     health = 100;
-    
-    isKillingPlayer = true;
+
     isDead = false;
-    
-    // Default color pattern realisations do nothing
-    bulletColPattern = new BulletColorPattern() {
-      public void setBulletColor(Bullet b, int n, int c) {
-        b.col = color(255);
-      }
-    };
-    
-    for (int i = 0; i < bulletsCount; i++) {
-      bullets[i] = new Bullet();
-    }
-    
-    fireModule = new FireModule();
-    moveModule = new MoveModule();
+
+    // Default move pattern realisation does nothing
+    setMPattern(new MPattern() {
+      public void move() {}
+    });
   }
-  
+
   //--------- Multipurpose methods --------------------------
-  
-  public void update() {
+
+  @Override public void update() {
     if (!isDead) {
-      takeDamage();
-      fire();
+      takeDamage(); // Comment this in test mode
       move();
+      fire();
       display();
     }
     updateBullets();
   }
-  
+
   //--------- Main methods --------------------------------
-  
-  private void updateBullets() {
-    for (Bullet bullet: bullets) {
-      bullet.update(isKillingPlayer);
+
+  protected void updateBullets() {
+    for (FCPattern fc: fcPatterns) {
+      fc.updateBullets();
     }
   }
-  
+
   void fire() {
-    fireModule.fire();
+    for (FCPattern fc: fcPatterns) {
+      fc.fireAndColorize();
+    }
   }
-  
-  void move() {
-    moveModule.move();
-  }
-  
+
   void display() {
     noFill();
     strokeWeight(1);
-    stroke(200, 0, 255);
-    rectMode(CENTER);
-    rect(x, y, 40, 40);
-    rectMode(CORNER);
-    
-    fill(200, 0, 255);
+    stroke(col);
+    rect(position.x, position.y, size, size);
+
+    fill(col);
     textSize(20);
-    textAlign(CENTER);
-    text(health, x, y);
-    textAlign(LEFT, TOP);
+    text(health, position.x, position.y); // TODO: Fix text display
   }
-  
-  void takeDamage()
-  {
-    for (Bullet bullet: player.playerGun.bullets) {
-      if (hit(bullet)) {
+
+  void takeDamage() {
+    ArrayList<Bullet> playerBullets = new ArrayList<Bullet>();
+    for (FCPattern playerFCP: player.fcPatterns) {
+      playerBullets.addAll(playerFCP.bullets);
+    }
+
+    for (Bullet bullet: playerBullets) {
+      if (isTouching(bullet)) {
         health--;
-        bullet.x = 2000;
+        bullet.position.x = 2000;
       }
     }
-    
+
     if (health <= 0) {
       isDead = true;
     }
   }
-  
-  //--------- Private inner methods -------------------------
-  
-  private boolean hit(Bullet bullet) {
-    return (bullet.y - bullet.w < y + 20 - 2 
-         && bullet.x + bullet.w > x - 20 
-         && bullet.x - bullet.w < x + 20 
-         && bullet.y + bullet.w > y - 20 + 2);
-  }
-  
+
   //--------- GETters / SETters ----------------------
-  
-  void setPosition(float x, float y) {
-    this.x = x;
-    this.y = y;
+
+  void addFCPattern(FCPattern newPattern) {
+    newPattern.gameObject = this;
+    fcPatterns.add(newPattern);
   }
-  
-  //------------ Modules -------------------------------
-  //----------- Fire module ----------------------------
-  
-  private class FireModule {
-    private int shotDelayCounter = 0;
-    int shotDelay;
-    int bulletShotsAtOnce;
-    
-    FirePattern firePattern;
-    
-    public FireModule() {
-      shotDelay = 3;
-      bulletShotsAtOnce = 1;
-      
-      firePattern = new FirePattern() {
-        public void fire(Bullet b, int n, float x, float y) {}
-      };
-    }
-    
-    void fire() {
-      if (shotCooldown()) {
-        for (int i = 0; i < bulletShotsAtOnce; i++) {
-          int bNum = nextBulNum();
-          Bullet bullet = bullets[bNum];
-          firePattern.fire(bullet, bNum, x, y);
-          bulletColPattern.setBulletColor(bullet, bNum, bulletsCount);
-        }
-      }
-    }
-      
-    private int nextBulNum() {
-      if (numOfCurBullet < bulletsCount - 1) {
-        return numOfCurBullet++;
-      } else {
-        return numOfCurBullet = 0;
-      }
-    }
-  
-    private boolean shotCooldown() {
-      if (shotDelayCounter > shotDelay) {
-        shotDelayCounter = 2;
-        return true;
-      }
-      shotDelayCounter++;
-      return false;
-    }
-  }
-  
-  //----------- Move module -----------------------------------
-  
-  private class MoveModule {
-    MovePattern movePattern;
-    
-    private int timeCounter = 0;
-    
-    public MoveModule() {
-      movePattern = new MovePattern() {
-        public PVector move(float x, float y, int t) {
-          return new PVector(x, y);
-        }
-      };
-    }
-    
-    void move() {
-      PVector newPosition
-        = movePattern.move(x, y, timeCounter);
-        
-      x = newPosition.x;
-      y = newPosition.y;
-      
-      timeCounter++;
-    }
+  FCPattern getFCPattern(int index) {
+    return fcPatterns.get(index);
   }
 }

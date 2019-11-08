@@ -1,82 +1,76 @@
-class Player {
-  float x;
-  float y;
-  int size;
-  
-  boolean isDead;
-  
-  Cannon playerGun;
-  
-  //----------- Constructor ---------------------------
-  
-  public Player(float x, float y, int size) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    
+class Player extends Cannon {
+
+  //----------- Constructor ----------------------------------------------------
+
+  public Player() {
+    this.position = new PVector(width / 2, height / 2 + 200);
+
+    this.size = 8;
     isDead = false;
-    
-    playerGun = new Cannon(150);
-    playerGun.setPosition(x, y);
-    playerGun.fireModule.shotDelay = 3;
-    playerGun.fireModule.bulletShotsAtOnce = 5;
-    playerGun.isKillingPlayer = false;
-    
-    playerGun.fireModule.firePattern = new FirePattern() {
-      public void fire(Bullet bullet, int bulletNum, float canX, float canY) {
-        float bulletSpeedX = (bulletNum % 5 - 2) * 1.4;
-        
-        bullet.x = player.x;
-        bullet.y = player.y - 5;
-        bullet.speedX = bulletSpeedX;
-        bullet.speedY = -30;
-        bullet.w = 8;
+
+    addFCPattern(new FCPattern() {
+      public void fire() {
+         int num = this.bulletsCount;
+        Bullet bullet = new Bullet();
+
+        float bulletSpeedX = (num % 5 - 2) * 1.4;
+
+        bullet.setPosition(player.getPosition().add(0, -5));
+        bullet.mPattern.setVelocity(bulletSpeedX, -30);
+        bullet.mPattern.speed = 30;
+        bullet.size = 8;
+
+        bullets.add(bullet);
       }
-    };
+    });
+    getFCPattern(0).shotCooldown = 4;
+    getFCPattern(0).bulletsPerShot = 5;
+
+    setMPattern(new MPattern() {
+      public void move() {
+        if (mousePressed) {
+          final float SENSITIVITY = 1;
+          PVector pos = gameObject.getPosition();
+
+          pos.x += SENSITIVITY * (mouseX - pmouseX);
+          pos.y += SENSITIVITY * (mouseY - pmouseY);
+
+          gameObject.setPosition(pos);
+        }
+      }
+    });
   }
-  
-  //--------- Multipurpose methods --------------------------
-  
-  public void update() {
-    move();
-    fire();
-    display();
-  }
-  
-  //--------- Main methods ----------------------
-  
-  void move() {
-    if (!isOnTheScreen()) stayOnTheScreen();
-  
-    if (mousePressed) {
-      float sensitivity = 1;
-      x += sensitivity * (mouseX - pmouseX);
-      y += sensitivity * (mouseY - pmouseY);
+
+  //--------- Multipurpose methods ---------------------------------------------
+
+  @Override public void update() {
+    if (!isDead) {
+      move();
+      fire();
+      display();
+      updateBullets();
     }
   }
-  
-  void fire() {
-    playerGun.fire();
-    playerGun.updateBullets();
+
+  //--------- Main methods -----------------------------------------------------
+
+  void move() {
+    if (!isOnScreen()) stayOnTheScreen();
+    super.move();
   }
-  
+
   void display() {
     noStroke();
     fill(255);
-    ellipse(x, y, size, size);
+    ellipse(position.x, position.y, size, size);
   }
-  
-  //------- Private inner methods --------------------
-  
-  private void stayOnTheScreen() {
-    if (x <= 0) x = 1;
-    else if (x >= width) x = width - 1;
-    if (y <= 0) y = 1;
-    else if (y >= height) y = height - 1;
-  }
-  
-  private boolean isOnTheScreen() {
-    return (x > 0 && x < width &&
-            y > 0 && y < height);
+
+  //------- Private inner methods ----------------------------------------------
+
+  private void stayOnTheScreen() {  // TODO: Optimize this method
+    if (position.x <= 0) position.x = 1;
+    else if (position.x >= width) position.x = width - 1;
+    if (position.y <= 0) position.y = 1;
+    else if (position.y >= height) position.y = height - 1;
   }
 }
